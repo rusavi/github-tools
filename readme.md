@@ -1,5 +1,5 @@
 _Github Tools_ provide a set of utilities that will allow you to easily manage
-repositories you cloned from github to your local hard drive.
+repositories you clone from github to your local hard drive.
 
 # Get started
 Go to the folder in which you put all repositories you clone from github, and
@@ -18,7 +18,7 @@ that name, then it will clone the repository inside that folder.
 
 # Update
 
-When you want to update all the folders, run `./update`.
+When you want to update all repositories, run `./update`.
 
 This command will first check to see if you have made any changes in the
 repository, if so it will run `git fetch --all`, and if there is no changes
@@ -43,4 +43,4 @@ google/gif-for-cli                  2fc0b21 - 2 days ago - Sean Hayes <sth@googl
 
 # Trending
 
-Clone all github trending repositories to your local hard drive.
+Run `./trending` to clone all github trending repositories to your local hard drive.
