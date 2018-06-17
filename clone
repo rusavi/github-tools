@@ -43,6 +43,10 @@ function _clone($url) {
 
 $options = getopt('u:h', ['url:', 'help']);
 
+if (!count($options) && count($argv) === 2) {
+    return _clone($argv[1]);
+}
+
 if (count($options) < 1) {
     help("--url argument is required!");
 }

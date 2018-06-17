@@ -11,7 +11,7 @@ $ git clone https://github.com/rusavi/github-tools .
 
 # Clone
 
-use `./clone -u https://github.com/username/repository` to clone a new repository
+use `./clone https://github.com/username/repository` to clone a new repository
 to your local hard drive, this command, will first check if repository exists,
 if not it will extract the `username` from the url, and create a folder with
 that name, then it will clone the repository inside that folder.
