@@ -1,0 +1,93 @@
+#!/usr/bin/php
+
+<?php
+
+function help($message = null) {
+    if ($message) {
+        printf("\033[0;31m{$message}\033[0m\n\n");
+    }
+
+    printf(
+        "%s, %s.\n\n%s\n\n",
+        "Kiara Rusavi (c) 2018",
+        "List all locally cloned repositories",
+        "  -n, --name (optional) Search for repositories that name contains the given value.\n" .
+        "  -h, --help (optional) print this help."
+    );
+
+    exit(1);
+}
+
+function getInfo($pathname) {
+    chdir($pathname);
+
+    return trim(shell_exec('git log --format="%h - %cr - %an <%ae> - %s" -1 --all'));
+}
+
+function shouldAddRepository($repository_name, $options) {
+    $value = @$options['n'] ?? @$options['name'];
+
+    if (!$value) {
+        return true;
+    }
+
+    return !!preg_match(sprintf('/%s/i', $value), $repository_name);
+}
+
+$options = getopt('n:h', ['name:', 'help']);
+
+foreach ($options as $option => $value) {
+    switch ($option) {
+        case 'h':
+        case 'help': help();
+    }
+}
+
+$rdi = new RecursiveDirectoryIterator(
+    __DIR__,
+    FilesystemIterator::SKIP_DOTS | FilesystemIterator::KEY_AS_FILENAME
+);
+
+$repositories = [];
+$pad = 0;
+
+foreach ($rdi as $filename => $splFileInfo) {
+    if (preg_match('/^\./', $filename) || is_file($splFileInfo->getPathname())) {
+        continue;
+    }
+
+    if (is_dir($splFileInfo->getPathname() . '/.git')) {
+        $key = $filename;
+
+        if (shouldAddRepository($key, $options)) {
+            $repositories[$key] = getInfo($splFileInfo->getPathname());
+        }
+    } else {
+        $repos = new RecursiveDirectoryIterator(
+            $splFileInfo->getPathname(),
+            FilesystemIterator::SKIP_DOTS | FilesystemIterator::KEY_AS_FILENAME
+        );
+
+        foreach ($repos as $repo_filename => $repoSplFileInfo) {
+            if (is_dir($repoSplFileInfo->getPathname() . '/.git')) {
+                $key = "{$filename}/{$repo_filename}";
+
+                if (shouldAddRepository($key, $options)) {
+                    $repositories[$key] = getInfo($repoSplFileInfo->getPathname());
+                }
+            }
+        }
+    }
+
+    if ($pad < $len = strlen($key)) {
+        $pad = $len;
+    }
+}
+
+ksort($repositories, SORT_FLAG_CASE);
+
+foreach ($repositories as $repository => $info) {
+    printf("\033[0;32m%-{$pad}s\033[0m %s\n", $repository, $info);
+}
+
+# vi: set ft=php

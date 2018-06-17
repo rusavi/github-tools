@@ -1,0 +1,45 @@
+#!/usr/bin/php
+
+<?php
+
+define('RE_REPOSITORY_TAG', '<h3.*?href="(.*?)"');
+
+function help($message = null) {
+    if ($message) {
+        printf("\033[0;31m{$message}\033[0m\n\n");
+    }
+
+    printf(
+        "%s, %s.\n\n%s\n\n",
+        "Kiara Rusavi (c) 2018",
+        "Clone all github trending repositories",
+        "  -h, --help (optional) print this help."
+    );
+
+    exit(1);
+}
+
+$options = getopt('h', ['help']);
+
+foreach ($options as $option => $value) {
+    switch ($option) {
+        case 'h':
+        case 'help': help();
+    }
+}
+
+$html = file_get_contents('https://github.com/trending');
+
+preg_match_all(sprintf('/%s/si', RE_REPOSITORY_TAG), $html, $m);
+
+if (!isset($m[1])) {
+    help('Could not find any repositories on the html!');
+}
+
+foreach ($m[1] as $link) {
+    if (!is_dir(__DIR__ . $link)) {
+        `./clone --url 'https://github.com{$link}'`;
+    }
+}
+
+# vi: set ft=php

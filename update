@@ -1,0 +1,69 @@
+#!/usr/bin/php
+
+<?php
+
+function help($message = null) {
+    if ($message) {
+        printf("\033[0;31m{$message}\033[0m\n\n");
+    }
+
+    printf(
+        "%s, %s.\n\n%s\n\n",
+        "Kiara Rusavi (c) 2018",
+        "Update all locale repositories",
+        "  -h, --help (optional) print this help."
+    );
+
+    exit(1);
+}
+
+function fetchOrPull($repository, $path) {
+    chdir($path);
+
+    printf("\033[0;32m[ %s ]\033[0m\n", $repository);
+
+    $output = trim(shell_exec('git status --porcelain'));
+
+    if (empty($output)) {
+        `git pull --all`;
+    } else {
+        `git fetch --all`;
+    }
+}
+
+$options = getopt('h', ['help']);
+
+foreach ($options as $option => $value) {
+    switch ($option) {
+        case 'h':
+        case 'help': help();
+    }
+}
+
+$rdi = new RecursiveDirectoryIterator(
+    __DIR__,
+    FilesystemIterator::KEY_AS_FILENAME | FilesystemIterator::SKIP_DOTS
+);
+
+foreach ($rdi as $filename => $splFileInfo) {
+    if (preg_match('/^\./', $filename) || is_file($splFileInfo->getPathname())) {
+        continue;
+    }
+
+    if (is_dir($splFileInfo->getPathname() . '/.git')) {
+        fetchOrPull($filename, $splFileInfo->getPathname());
+    } else {
+        $repos = new RecursiveDirectoryIterator(
+            $splFileInfo->getPathname(),
+            FilesystemIterator::KEY_AS_FILENAME | FilesystemIterator::SKIP_DOTS
+        );
+
+        foreach ($repos as $repo_filename => $repoSplFileInfo) {
+            if (is_dir($repoSplFileInfo->getPathname() . '/.git')) {
+                fetchOrPull("{$filename}/{$repo_filename}", $repoSplFileInfo->getPathname());
+            }
+        }
+    }
+}
+
+# vi: set ft=php

@@ -1,0 +1,65 @@
+#!/usr/bin/php
+
+<?php
+
+define('RE_GITHUB_URL', '/github\.com\/(.*?)\/(.*?)(?:\/|$|\.git(?:\/|$))/i');
+
+function help($message = null) {
+    if ($message) {
+        printf("\033[0;31m{$message}\033[0m\n\n");
+    }
+
+    printf(
+        "%s, %s.\n\n%s\n\n",
+        "Kiara Rusavi (c) 2018",
+        "Clone github repository to current folder",
+        "  -u, --url  (required) full link to github repository.\n" .
+        "  -h, --help (optional) print this help."
+    );
+
+    exit(1);
+}
+
+function _clone($url) {
+    preg_match(RE_GITHUB_URL, $url, $m);
+
+    if (count($m) !== 3) {
+        help("'{$url}' is not a valid github repository url!");
+    }
+
+    $directory = $m[1];
+    $repository = $m[2];
+    $path = __DIR__ . "/{$directory}/{$repository}";
+
+    if (is_dir($path)) {
+        die("Repository '{$path}' already exists!");
+    }
+
+    mkdir($path, 0755, true);
+    chdir(__DIR__ . "/{$directory}");
+
+    `git clone {$url}`;
+}
+
+$options = getopt('u:h', ['url:', 'help']);
+
+if (count($options) < 1) {
+    help("--url argument is required!");
+}
+
+foreach ($options as $option => $value) {
+    switch ($option) {
+
+        case 'h':
+        case 'help': help();
+
+        case 'u':
+        case 'url': {
+            _clone($value);
+            break;
+        }
+
+    }
+}
+
+#vi: set ft=php
